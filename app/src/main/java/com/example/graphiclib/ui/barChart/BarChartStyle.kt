@@ -1,4 +1,4 @@
-package com.example.graphiclib.ui
+package com.example.graphiclib.ui.barChart
 
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.tween

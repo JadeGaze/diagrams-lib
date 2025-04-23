@@ -11,9 +11,11 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.graphiclib.ui.BarChart
-import com.example.graphiclib.ui.BarChartStyle
+import com.example.graphiclib.data.BarChartData
+import com.example.graphiclib.ui.barChart.BarChart
+import com.example.graphiclib.ui.barChart.BarChartStyle
 import com.example.graphiclib.ui.ProductivityModel
+import com.example.graphiclib.ui.barChart.BarChartState
 import com.example.graphiclib.ui.theme.GraphicLibTheme
 
 @Preview (showBackground = true)
@@ -27,16 +29,7 @@ fun GraphicScreenDefaultPreview() {
                 .padding(20.dp)
                 .height((LocalConfiguration.current.screenWidthDp * 9 / 16).dp),
             chartStyle = BarChartStyle.Default,
-            data = listOf(
-                ProductivityModel(id = "", result = 8f),
-                ProductivityModel(id = "", result = 15f),
-                ProductivityModel(id = "", result = 2f),
-                ProductivityModel(id = "", result = 4f),
-                ProductivityModel(id = "", result = 6f),
-                ProductivityModel(id = "", result = 10f),
-                ProductivityModel(id = "", result = 5f),
-                ProductivityModel(id = "", result = 1f),
-            )
+            state = BarChartState(data = BarChartData.generateSampleData())
         )
     }
 }
@@ -53,15 +46,7 @@ fun GraphicScreenDarkPreview() {
                 .padding(20.dp)
                 .height((LocalConfiguration.current.screenWidthDp * 9 / 16).dp),
             chartStyle = BarChartStyle.DarkTheme,
-            data = listOf(
-                ProductivityModel(id = "", result = 8f),
-                ProductivityModel(id = "", result = 2f),
-                ProductivityModel(id = "", result = 4f),
-                ProductivityModel(id = "", result = 6f),
-                ProductivityModel(id = "", result = 10f),
-                ProductivityModel(id = "", result = 5f),
-                ProductivityModel(id = "", result = 1f),
-            )
+            state = BarChartState(data = BarChartData.generateSampleData())
         )
     }
 }
@@ -82,15 +67,7 @@ fun GraphicScreenCustomPreview() {
                 barColor = colorResource(R.color.purple_500),
                 textColor = colorResource(R.color.black),
             ),
-            data = listOf(
-                ProductivityModel(id = "", result = 8f),
-                ProductivityModel(id = "", result = 2f),
-                ProductivityModel(id = "", result = 4f),
-                ProductivityModel(id = "", result = 6f),
-                ProductivityModel(id = "", result = 10f),
-                ProductivityModel(id = "", result = 5f),
-                ProductivityModel(id = "", result = 1f),
-            )
+            state = BarChartState(data = BarChartData.generateSampleData())
         )
     }
 }
