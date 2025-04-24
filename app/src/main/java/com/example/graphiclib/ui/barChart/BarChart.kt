@@ -3,8 +3,10 @@ package com.example.graphiclib.ui.barChart
 import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -79,7 +81,10 @@ fun BarChart(
                         selectedRectIndex =
                             if (currSelected == selectedRectIndex) -1 else currSelected
                     })
-                }) {
+                }
+                .scrollable(state = state.scrollableState, Orientation.Horizontal)
+
+        ) {
 
             val chartWidth = size.width - 128.dp.value
             val chartHeight = size.height - 64.dp.value

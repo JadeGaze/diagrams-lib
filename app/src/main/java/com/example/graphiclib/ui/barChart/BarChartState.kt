@@ -1,8 +1,9 @@
 package com.example.graphiclib.ui.barChart
 
-import android.util.Log
+import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
@@ -10,6 +11,7 @@ import com.example.graphiclib.data.BarChartData
 import com.example.graphiclib.data.BarNode
 import kotlin.math.floor
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 class BarChartState(
     data: BarChartData,
@@ -18,6 +20,7 @@ class BarChartState(
     private var bars = data
     var currentLevel by mutableStateOf(data.currentLevel)
         private set
+    val root = bars.rootNodes
 
     private val visibleBarCount by derivedStateOf { min(currentLevel.size, 4) }
 
@@ -35,9 +38,29 @@ class BarChartState(
     val minValue by derivedStateOf { visibleBars.minOfOrNull { it.value } ?: 0f }
     val avgValue by derivedStateOf { sumValue / visibleBarCount }
 
+    private var scrollOffset by mutableFloatStateOf(0f)
+    val scrollableState = ScrollableState {
+        scrollOffset = if (it > 0) {
+            (scrollOffset - it.scrolledBars).coerceAtLeast(0f)
+        } else {
+            (scrollOffset - it.scrolledBars).coerceAtMost(
+                (currentLevel.size - visibleBarCount).coerceAtLeast(
+                    0
+                ).toFloat()
+            )
+        }
+        it
+    }
+
+    private val Float.scrolledBars: Float
+        get() = this * visibleBarCount.toFloat() / chartWidth
+
     val visibleBars by derivedStateOf {
         if (currentLevel.isNotEmpty()) {
-            currentLevel.subList(0, visibleBarCount)
+            currentLevel.subList(
+                scrollOffset.roundToInt().coerceAtLeast(0),
+                (scrollOffset.roundToInt() + visibleBarCount).coerceAtMost(currentLevel.size)
+            )
         } else {
             emptyList()
         }
@@ -56,11 +79,8 @@ class BarChartState(
                 )
             )
         }
-        Log.d("clickableRectangles", "$rectangles")
         rectangles
     }
-
-    val root = bars.rootNodes
 
     fun setChartSize(width: Float, height: Float) {
         chartWidth = width
@@ -75,13 +95,13 @@ class BarChartState(
     fun zoomIn(node: BarNode) {
         bars.zoomIn(node)
         currentLevel = bars.currentLevel
-        Log.d("STATE", "ZOOM IN; ${currentLevel}")
+        scrollOffset = 0f
     }
 
     fun zoomOut() {
         bars.zoomOut()
         currentLevel = bars.currentLevel
-        Log.d("STATE", "ZOOM OUT; ${currentLevel}")
+        scrollOffset = 0f
     }
 
 }
