@@ -17,7 +17,7 @@ class BarChartState(
     data: BarChartData,
 ) {
 
-    private var bars = data
+    private val bars = data
     var currentLevel by mutableStateOf(data.currentLevel)
         private set
     val root = bars.rootNodes

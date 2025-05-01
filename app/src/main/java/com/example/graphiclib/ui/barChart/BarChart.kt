@@ -176,7 +176,7 @@ private fun Offset.isBar(bars: MutableList<BarRectangle>): Int {
 }
 
 
-private fun DrawScope.drawAxis(
+fun DrawScope.drawAxis(
     chartWidth: Float,
     chartHeight: Float,
     axisColor: Color,
@@ -240,7 +240,7 @@ private fun DrawScope.drawAvg(
     )
 }
 
-private fun DrawScope.drawGridWithSteps(
+fun DrawScope.drawGridWithSteps(
     steps: Int,
     stepSize: Float,
     maxValue: Float,
