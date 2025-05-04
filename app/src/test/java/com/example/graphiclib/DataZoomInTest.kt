@@ -7,7 +7,7 @@ class DataZoomInTest {
 
     @Test
     fun zoomIn_isCorrect() {
-        val chartData = BarChartData.generateSampleData()
+        val chartData = BarChartData.generateLineSampleData()
 
         chartData.zoomIn(chartData.currentLevel[0])
         println(chartData.currentLevel)

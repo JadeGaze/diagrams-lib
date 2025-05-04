@@ -6,7 +6,6 @@ data class BarNode(
     val label: String,
     val value: Float,
     val children: List<BarNode> = emptyList(),
-    val color: String = "#3498db",
 )
 
 data class BarChartData(
@@ -32,7 +31,7 @@ data class BarChartData(
     }
 
     companion object {
-        fun generateSampleData(): BarChartData {
+        fun generateLineSampleData(): BarChartData {
             val months2023 = listOf(
                 BarNode("jan-2023", "Янв 2023", 120.0f),
                 BarNode("feb-2023", "Фев 2023", 90.0f),
