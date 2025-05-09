@@ -1,6 +1,5 @@
 package com.example.graphiclib.ui.barChart
 
-import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
@@ -9,7 +8,6 @@ import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -23,8 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextMeasurer
@@ -38,11 +34,6 @@ import com.example.graphiclib.ui.utils.calculateGridSteps
 import com.example.graphiclib.ui.utils.drawAvg
 import com.example.graphiclib.ui.utils.drawAxis
 import com.example.graphiclib.ui.utils.drawGridWithSteps
-import kotlin.math.ceil
-import kotlin.math.floor
-import kotlin.math.log10
-import kotlin.math.pow
-import kotlin.math.roundToInt
 
 @Composable
 fun BarChart(
@@ -55,7 +46,7 @@ fun BarChart(
 
     val averageLabel = "average ${state.avgValue}"
 
-    val text by remember { derivedStateOf { "${if (selectedRectIndex == -1) state.sumValue else state.visibleBars[selectedRectIndex].value} чего-то" } }
+    val text by remember { derivedStateOf { "${if (selectedRectIndex == -1) state.sumValue else state.visibleItems[selectedRectIndex].value} чего-то" } }
     val (stepSize, steps) = remember(state.maxValue) { calculateGridSteps(state.maxValue) }
 
     var scale by remember { mutableFloatStateOf(1f) }
@@ -72,7 +63,7 @@ fun BarChart(
                     detectTransformGestures { _, _, zoom, _ ->
                         scale = (scale * zoom)
                         if (scale > 1.5f && state.currentLevel == state.root) {
-                            state.zoomIn(state.visibleBars.first())
+                            state.zoomIn(state.visibleItems.first())
                             currentLevel = state.currentLevel
                         } else if (scale < 0.8f && state.currentLevel != state.root) {
                             state.zoomOut()
@@ -111,7 +102,7 @@ fun BarChart(
                 chartHeight = chartHeight,
                 chartWidth = chartWidth,
                 standardUnit = state.standardUnit,
-                ceilNumber = state.visibleBars.size
+                ceilNumber = state.visibleItems.size
             )
 
             drawBars(
@@ -142,7 +133,7 @@ fun DrawScope.drawBars(
     chartHeight: Float,
     chartWidth: Float,
 ) {
-    state.visibleBars.forEachIndexed { index, bar ->
+    state.visibleItems.forEachIndexed { index, bar ->
         val xOffset = state.xOffset(bar) + state.space
         val yOffset = chartHeight - bar.value * state.standardUnit
 
@@ -155,7 +146,7 @@ fun DrawScope.drawBars(
 
         drawText(
             textMeasurer = textMeasurer,
-            text = state.visibleBars.getOrNull(index)?.label ?: "",
+            text = state.visibleItems.getOrNull(index)?.label ?: "",
             style = TextStyle(
                 color = if (index == selectedRectIndex) {
                     chartStyle.barColor
@@ -165,8 +156,8 @@ fun DrawScope.drawBars(
                     )
                 }, fontSize = 12.sp, textAlign = TextAlign.Center
             ),
-            size = Size(chartWidth / state.visibleBars.size, this.size.height),
-            topLeft = Offset(chartWidth / state.visibleBars.size * index, chartHeight + 8)
+            size = Size(chartWidth / state.visibleItems.size, this.size.height),
+            topLeft = Offset(chartWidth / state.visibleItems.size * index, chartHeight + 8)
         )
     }
 }

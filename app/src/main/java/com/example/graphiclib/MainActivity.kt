@@ -18,11 +18,11 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.graphiclib.data.BarChartData
-import com.example.graphiclib.data.LineChartData
 import com.example.graphiclib.ui.barChart.BarChart
 import com.example.graphiclib.ui.barChart.BarChartState
 import com.example.graphiclib.ui.barChart.BarChartStyle
+import com.example.graphiclib.ui.base.BarChartData
+import com.example.graphiclib.ui.base.LineChartData
 import com.example.graphiclib.ui.lineChart.LineChart
 import com.example.graphiclib.ui.lineChart.LineChartState
 import com.example.graphiclib.ui.theme.GraphicLibTheme
@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity() {
                                 .background(colorResource(id = R.color.white))
                                 .padding(innerPadding),
                             chartStyle = BarChartStyle.Default,
-                            state = LineChartState(LineChartData.sampleHierarchy())
+                            state = LineChartState(LineChartData.default())
                         )
                     }
 
@@ -83,7 +83,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                         .padding(innerPadding)
                         .height((LocalConfiguration.current.screenWidthDp * 9 / 16).dp),
                     chartStyle = BarChartStyle.Default,
-                    state = BarChartState(BarChartData.generateLineSampleData())
+                    state = BarChartState(BarChartData.default())
                 )
                 Spacer(Modifier.height(100.dp))
                 LineChart(
@@ -93,7 +93,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                         .background(colorResource(id = R.color.white))
                         .padding(innerPadding),
                     chartStyle = BarChartStyle.Default,
-                    state = LineChartState(LineChartData.sampleHierarchy())
+                    state = LineChartState(LineChartData.default())
                 )
             }
 

@@ -34,7 +34,7 @@ data class CandleChartStyle(
 
     // Эффекты
     val barCornerRadius: Dp = 4.dp,
-    val barElevation: Dp = 2.dp
+    val barElevation: Dp = 2.dp,
 ) {
     companion object {
         val Default = BarChartStyle(

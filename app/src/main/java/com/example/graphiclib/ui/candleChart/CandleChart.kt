@@ -16,8 +16,6 @@ fun CandleChart(
         val chartWidth = size.width - 128.dp.value
         val chartHeight = size.height - 64.dp.value
 
-        state.setChartSize(chartWidth, chartHeight)
-
     }
 
 }

@@ -22,10 +22,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.graphiclib.R
-import com.example.graphiclib.data.LineChartData
-import com.example.graphiclib.data.TimeResolution
-import com.example.graphiclib.data.buildHierarchyFromFlatData
 import com.example.graphiclib.ui.barChart.BarChartStyle
+import com.example.graphiclib.ui.base.LineChartData
 import com.example.graphiclib.ui.theme.GraphicLibTheme
 import com.example.graphiclib.ui.utils.calculateGridSteps
 import com.example.graphiclib.ui.utils.drawAxis
@@ -66,7 +64,7 @@ fun LineChart(
             chartHeight = chartHeight,
             chartWidth = chartWidth,
             standardUnit = state.standardUnit,
-            ceilNumber = state.visiblePoints.size
+            ceilNumber = state.visibleItems.size
         )
 
         drawLines(state, textMeasurer, chartStyle, chartHeight, chartWidth)
@@ -82,10 +80,10 @@ private fun DrawScope.drawLines(
     chartHeight: Float,
     chartWidth: Float,
 ) {
-    val segmentWidth = chartWidth / state.visiblePoints.size
-    val pointWidth = segmentWidth / state.visiblePoints.first().values.size
+    val segmentWidth = chartWidth / state.visibleItems.size
+    val pointWidth = segmentWidth / state.visibleItems.first().values.size
 
-    state.visiblePoints.forEachIndexed { index, point ->
+    state.visibleItems.forEachIndexed { index, point ->
         point.values.forEachIndexed { valueIndex, yValue ->
             val xPos = segmentWidth * index + pointWidth * valueIndex
             val yPos = chartHeight - yValue * state.standardUnit
@@ -112,7 +110,7 @@ private fun DrawScope.drawLines(
 
             // Соединение с предыдущим узлом
             if (index > 0 && valueIndex == 0) {
-                val prevNode = state.visiblePoints[index - 1]
+                val prevNode = state.visibleItems[index - 1]
                 val prevX = segmentWidth * (index - 1) + pointWidth * (prevNode.values.size - 1)
                 val prevY = chartHeight - prevNode.values.last() * state.standardUnit
 
@@ -126,12 +124,12 @@ private fun DrawScope.drawLines(
         }
         drawText(
             textMeasurer = textMeasurer,
-            text = state.visiblePoints.getOrNull(index)?.label ?: "",
+            text = state.visibleItems.getOrNull(index)?.label ?: "",
             style = TextStyle(
                 color = chartStyle.barColor, fontSize = 12.sp, textAlign = TextAlign.Center
             ),
-            size = Size(chartWidth / state.visiblePoints.size, this.size.height),
-            topLeft = Offset(chartWidth / state.visiblePoints.size * index, chartHeight + 8)
+            size = Size(chartWidth / state.visibleItems.size, this.size.height),
+            topLeft = Offset(chartWidth / state.visibleItems.size * index, chartHeight + 8)
         )
     }
 
@@ -149,11 +147,7 @@ fun LineGraphicScreenDefaultPreview() {
                 .height((LocalConfiguration.current.screenWidthDp * 9 / 16).dp),
             chartStyle = BarChartStyle.Default,
             state = LineChartState(
-                data = buildHierarchyFromFlatData(
-                    maxPointsPerNode = 50,
-                    rawData = LineChartData.getTestData(),
-                    timeResolution = TimeResolution.DAY
-                )
+                data = LineChartData.default()
             )
         )
     }

@@ -1,5 +1,7 @@
 package com.example.graphiclib.data
 
+import com.example.graphiclib.ui.base.LineChartData
+import com.example.graphiclib.ui.base.TreeNode
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -8,134 +10,11 @@ import java.util.Locale
 
 
 data class PointNode(
-    val id: String,
+    override val id: String,
+    override val label: String,
     val values: List<Float>,
-    val label: String,
-    val children: List<PointNode> = emptyList(),
-)
-
-data class LineChartData(
-    val rootNodes: List<PointNode>,
-    var currentLevel: List<PointNode> = rootNodes,
-    var title: String = "Point Chart",
-    var history: MutableList<List<PointNode>> = mutableListOf(),
-) {
-    fun zoomIn(node: PointNode) {
-        if (node.children.isNotEmpty()) {
-            history.add(currentLevel)
-            currentLevel = node.children
-            title = "Данные за: ${node.label}"
-        }
-    }
-
-    fun zoomOut() {
-        if (history.isNotEmpty()) {
-            currentLevel = history.removeAt(history.lastIndex)
-            title = if (history.isEmpty()) "Общий обзор"
-            else "Данные за: ${currentLevel.firstOrNull()?.label}"
-        }
-    }
-
-    companion object {
-        fun sampleHierarchy(): LineChartData {
-            val year2020 = PointNode(
-                id = "2020",
-                values = listOf(300f, 350f, 280f), // 3 значения: утро, день, вечер
-                label = "2020 год",
-                children = listOf(
-                    PointNode(
-                        id = "2020_q1",
-                        values = listOf(400f, 420f, 380f),
-                        label = "Q1 2020",
-                        children = listOf(
-                            PointNode("2020_q1_jan", listOf(200f, 220f, 190f), "Январь"),
-                            PointNode("2020_q1_feb", listOf(340f, 360f, 320f), "Февраль"),
-                            PointNode("2020_q1_mar", listOf(150f, 170f, 130f), "Март"),
-                            PointNode("2020_q1_apr", listOf(170f, 190f, 150f), "Апрель")
-                        )
-                    ),
-                    PointNode(
-                        id = "2020_q2",
-                        values = listOf(350f, 370f, 330f),
-                        label = "Q2 2020"
-                    )
-                )
-            )
-
-            return LineChartData(
-                rootNodes = listOf(year2020),
-                title = "Продажи по времени суток"
-            )
-        }
-
-        fun getTestData(): List<RawDataPoint> = listOf(
-            RawDataPoint("2023-01-01T00:00", 10f),
-            RawDataPoint("2023-01-01T01:00", 12f),
-            RawDataPoint("2023-01-01T02:00", 8f),
-            RawDataPoint("2023-01-01T03:00", 15f),
-            RawDataPoint("2023-01-01T04:00", 20f),
-            RawDataPoint("2023-01-01T05:00", 18f),
-            RawDataPoint("2023-01-01T06:00", 25f),
-            RawDataPoint("2023-01-01T07:00", 30f),
-            RawDataPoint("2023-01-01T08:00", 28f),
-            RawDataPoint("2023-01-01T09:00", 22f),
-            RawDataPoint("2023-01-01T10:00", 35f),
-            RawDataPoint("2023-01-01T11:00", 40f),
-
-            RawDataPoint("2023-01-02T00:00", 15f),
-            RawDataPoint("2023-01-02T01:00", 18f),
-            RawDataPoint("2023-01-02T02:00", 10f),
-            RawDataPoint("2023-01-02T03:00", 22f),
-            RawDataPoint("2023-01-02T04:00", 25f),
-            RawDataPoint("2023-01-02T05:00", 20f),
-            RawDataPoint("2023-01-02T06:00", 32f),
-            RawDataPoint("2023-01-02T07:00", 35f),
-            RawDataPoint("2023-01-02T08:00", 30f),
-            RawDataPoint("2023-01-02T09:00", 28f),
-            RawDataPoint("2023-01-02T10:00", 42f),
-            RawDataPoint("2023-01-02T11:00", 38f),
-
-            RawDataPoint("2023-01-03T00:00", 20f),
-            RawDataPoint("2023-01-03T01:00", 22f),
-            RawDataPoint("2023-01-03T02:00", 15f),
-            RawDataPoint("2023-01-03T03:00", 25f),
-            RawDataPoint("2023-01-03T04:00", 30f),
-            RawDataPoint("2023-01-03T05:00", 25f),
-            RawDataPoint("2023-01-03T06:00", 38f),
-            RawDataPoint("2023-01-03T07:00", 40f),
-            RawDataPoint("2023-01-03T08:00", 35f),
-            RawDataPoint("2023-01-03T09:00", 32f),
-            RawDataPoint("2023-01-03T10:00", 45f),
-            RawDataPoint("2023-01-03T11:00", 42f),
-
-            RawDataPoint("2023-01-04T00:00", 25f),
-            RawDataPoint("2023-01-04T01:00", 28f),
-            RawDataPoint("2023-01-04T02:00", 18f),
-            RawDataPoint("2023-01-04T03:00", 30f),
-            RawDataPoint("2023-01-04T04:00", 35f),
-            RawDataPoint("2023-01-04T05:00", 30f),
-            RawDataPoint("2023-01-04T06:00", 42f),
-            RawDataPoint("2023-01-04T07:00", 45f),
-            RawDataPoint("2023-01-04T08:00", 40f),
-            RawDataPoint("2023-01-04T09:00", 38f),
-            RawDataPoint("2023-01-04T10:00", 48f),
-            RawDataPoint("2023-01-04T11:00", 45f),
-
-            RawDataPoint("2023-01-05T00:00", 30f),
-            RawDataPoint("2023-01-05T01:00", 32f),
-            RawDataPoint("2023-01-05T02:00", 25f),
-            RawDataPoint("2023-01-05T03:00", 35f),
-            RawDataPoint("2023-01-05T04:00", 40f),
-            RawDataPoint("2023-01-05T05:00", 35f),
-            RawDataPoint("2023-01-05T06:00", 45f),
-            RawDataPoint("2023-01-05T07:00", 50f),
-            RawDataPoint("2023-01-05T08:00", 45f),
-            RawDataPoint("2023-01-05T09:00", 42f),
-            RawDataPoint("2023-01-05T10:00", 50f),
-            RawDataPoint("2023-01-05T11:00", 45f)
-        )
-    }
-}
+    override val children: List<PointNode> = emptyList(),
+) : TreeNode<PointNode>
 
 data class RawDataPoint(
     val timestamp: String,
@@ -280,6 +159,7 @@ private fun aggregateValues(
                 ).random()
             }.distinct().take(maxPoints)
         }
+
         else -> {
             values.chunked(values.size / maxPoints) { chunk ->
                 chunk.average()
