@@ -34,10 +34,14 @@ data class BarChartStyle(
 
     // Эффекты
     val barCornerRadius: Dp = 4.dp,
-    val barElevation: Dp = 2.dp
+    val barElevation: Dp = 2.dp,
 ) {
     companion object {
-        val Default = BarChartStyle(axisColor = Color.Black, barColor = Color.Blue, textColor = Color.DarkGray)
+        val Default = BarChartStyle(
+            axisColor = Color.Black,
+            barColor = Color.Blue,
+            textColor = Color.DarkGray
+        )
         val DarkTheme = BarChartStyle(
             axisColor = Color.White,
             barColor = Color.Cyan,
