@@ -1,18 +1,19 @@
 package com.example.graphiclib.linChart
 
-import com.example.graphiclib.data.LineChartData
+import com.example.graphiclib.data.PointNode
+import com.example.graphiclib.ui.base.ChartData
 import org.junit.Test
 
 class LineChartData {
 
     @Test
     fun createSampleData() {
-        println(LineChartData.sampleHierarchy())
+        println(ChartData.default<PointNode>())
     }
 
     @Test
     fun childrenData() {
-        println(LineChartData.sampleHierarchy().rootNodes[0].children[0].children)
+        println(ChartData.default<PointNode>().rootNodes[0].children[0].children)
     }
 
 }

@@ -2,15 +2,22 @@ package com.example.graphiclib.ui.lineChart
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextMeasurer
@@ -38,11 +45,23 @@ fun LineChart(
 
     val textMeasurer = rememberTextMeasurer()
     val (stepSize, steps) = remember(state.maxValue) { calculateGridSteps(state.maxValue) }
+    var scale by remember { mutableFloatStateOf(1f) }
 
     Canvas(
-        modifier = modifier.padding(40.dp)
+        modifier = modifier
+            .padding(40.dp)
+            .pointerInput(Unit) {
+                detectTransformGestures { _, _, zoom, _ ->
+                    scale = (scale * zoom)
+                    if (scale > 1.5f && state.currentLevel == state.root) {
+                        state.zoomIn(state.visibleItems.first())
+                    } else if (scale < 0.8f && state.currentLevel != state.root) {
+                        state.zoomOut()
+                    }
+                }
+            }
+            .scrollable(state = state.scrollableState, orientation = Orientation.Horizontal)
     ) {
-
 
         val chartWidth = size.width - 128.dp.value
         val chartHeight = size.height - 64.dp.value
