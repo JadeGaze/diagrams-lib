@@ -35,7 +35,7 @@ data class ChartData<T : TreeNode<T>>(
     }
 
     companion object {
-        inline fun <reified T : TreeNode<T>> default(): ChartData<T> {
+        suspend inline fun <reified T : TreeNode<T>> default(): ChartData<T> {
             return when (T::class) {
                 BarNode::class -> {
                     val months2023 = listOf(

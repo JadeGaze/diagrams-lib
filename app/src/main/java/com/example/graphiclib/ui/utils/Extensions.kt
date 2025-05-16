@@ -13,6 +13,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.graphiclib.ui.barChart.BarChartStyle
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.log10
@@ -168,4 +173,37 @@ fun adjustStepSize(step: Float, maxValue: Float): Float {
     while (maxValue / adjusted > 8) adjusted *= 2
     while (maxValue / adjusted < 4) adjusted /= 2
     return adjusted
+}
+
+suspend fun <T, V> Iterable<T>.parMap(func: suspend (T) -> V): Iterable<V> =
+    coroutineScope {
+        map { element ->
+            async(Dispatchers.Default) { func(element) }
+        }.awaitAll()
+    }
+
+suspend inline fun <R> runSuspendCatching(block: () -> R): Result<R> {
+    return try {
+        Result.success(block())
+    } catch (c: CancellationException) {
+        throw c
+    } catch (e: Throwable) {
+        Result.failure(e)
+    }
+}
+
+suspend fun <T, K> List<T>.parallelGroupBy(
+    keySelector: (T) -> K,
+): Map<K, List<T>> = coroutineScope {
+    val chunkSize = (size / Runtime.getRuntime().availableProcessors()).coerceAtLeast(1)
+    this@parallelGroupBy.chunked(chunkSize).map { chunk ->
+        async(Dispatchers.Default) {
+            chunk.groupBy(keySelector)
+        }
+    }.awaitAll().fold(mutableMapOf()) { acc, map ->
+        map.forEach { (key, values) ->
+            acc.getOrPut(key) { mutableListOf() }.toMutableList().addAll(values)
+        }
+        acc
+    }
 }

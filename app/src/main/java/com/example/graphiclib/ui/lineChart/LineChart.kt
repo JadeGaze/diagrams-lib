@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -29,23 +30,46 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.graphiclib.R
+import com.example.graphiclib.data.RawDataPoint
+import com.example.graphiclib.data.TimeResolution
+import com.example.graphiclib.data.buildHierarchyFromFlatData
 import com.example.graphiclib.ui.barChart.BarChartStyle
+import com.example.graphiclib.ui.base.BaseViewModel
 import com.example.graphiclib.ui.base.LineChartData
 import com.example.graphiclib.ui.theme.GraphicLibTheme
 import com.example.graphiclib.ui.utils.calculateGridSteps
 import com.example.graphiclib.ui.utils.drawAxis
 import com.example.graphiclib.ui.utils.drawGridWithSteps
+import kotlinx.coroutines.runBlocking
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+import kotlin.math.PI
+import kotlin.math.sin
+import kotlin.random.Random
 
 @Composable
 fun LineChart(
     modifier: Modifier = Modifier,
     chartStyle: BarChartStyle,
     state: LineChartState,
+    viewModel: BaseViewModel = BaseViewModel(),
 ) {
+    val timeStart = System.currentTimeMillis()
 
     val textMeasurer = rememberTextMeasurer()
     val (stepSize, steps) = remember(state.maxValue) { calculateGridSteps(state.maxValue) }
     var scale by remember { mutableFloatStateOf(1f) }
+
+    var data: LineChartData? = null
+
+    LaunchedEffect(Unit) {
+        viewModel.generateLineDataDefaultData()
+    }
+
+    LaunchedEffect(viewModel.data) {
+
+    }
 
     Canvas(
         modifier = modifier
@@ -89,6 +113,8 @@ fun LineChart(
         drawLines(state, textMeasurer, chartStyle, chartHeight, chartWidth)
 
     }
+    println("TIME OF DRAWING: ${System.currentTimeMillis() - timeStart}")
+
 
 }
 
@@ -157,6 +183,9 @@ private fun DrawScope.drawLines(
 @Preview(showBackground = true)
 @Composable
 fun LineGraphicScreenDefaultPreview() {
+    val timeStart = System.currentTimeMillis()
+    val data = runBlocking { generateLargeData() }
+    println("TIME OF GENERATION: ${System.currentTimeMillis() - timeStart}")
     GraphicLibTheme {
         LineChart(
             Modifier
@@ -166,8 +195,58 @@ fun LineGraphicScreenDefaultPreview() {
                 .height((LocalConfiguration.current.screenWidthDp * 9 / 16).dp),
             chartStyle = BarChartStyle.Default,
             state = LineChartState(
-                data = LineChartData.default()
+                data = data
             )
         )
     }
+}
+
+suspend fun generateLargeData(): LineChartData {
+    val startDate = LocalDateTime.of(2023, 1, 1, 0, 0)
+    val endDate = LocalDateTime.of(2023, 12, 31, 23, 0)
+    val totalHours = ChronoUnit.HOURS.between(startDate, endDate) + 1
+
+    // Генерируем 20,000 точек (примерно по 2 точки в час)
+    val pointsPerHour = 2
+    val totalPoints = 1_000_000
+    val step = (totalHours * pointsPerHour).toDouble() / totalPoints
+
+    val rawData = mutableListOf<RawDataPoint>()
+    var currentDateTime = startDate
+    var hourFraction = 0.0
+
+    // Базовые параметры для генерации "реалистичных" данных
+    var baseValue = 50f
+    val dailyVariation = 30f
+    val hourlyVariation = 15f
+    val randomNoise = 5f
+
+    repeat(totalPoints) {
+        // Добавляем точку
+        rawData.add(
+            RawDataPoint(
+                timestamp = currentDateTime.format(DateTimeFormatter.ISO_DATE_TIME),
+                value = baseValue +
+                        (dailyVariation * sin(2 * PI * currentDateTime.dayOfYear / 365)).toFloat() +
+                        (hourlyVariation * sin(2 * PI * currentDateTime.hour / 24)).toFloat() +
+                        (Random.nextFloat() * 2 - 1) * randomNoise
+            )
+        )
+
+        // Перемещаем время вперед
+        hourFraction += step
+        if (hourFraction >= 1.0) {
+            val fullHours = hourFraction.toInt()
+            currentDateTime = currentDateTime.plusHours(fullHours.toLong())
+            hourFraction -= fullHours
+
+            // Медленно увеличиваем базовое значение с небольшими случайными колебаниями
+            baseValue += (Random.nextFloat() * 2 - 0.5f)
+        }
+    }
+    return buildHierarchyFromFlatData(
+        rawData = rawData,
+        timeResolution = TimeResolution.YEAR,
+        maxPointsPerNode = 50
+    )
 }

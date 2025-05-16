@@ -1,9 +1,6 @@
 package com.example.graphiclib.linChart
 
-import com.example.graphiclib.data.PointNode
 import com.example.graphiclib.data.RawDataPoint
-import com.example.graphiclib.data.TimeResolution
-import com.example.graphiclib.data.buildHierarchyFromFlatData
 import org.junit.Test
 
 class MapperTest {
@@ -17,16 +14,16 @@ class MapperTest {
             RawDataPoint("2023-02-15T11:00:00", 180f)
         )
 
-        val chartData = buildHierarchyFromFlatData(testData, TimeResolution.YEAR)
-
-        // Печатаем структуру
-        fun printTree(nodes: List<PointNode>, indent: String = "") {
-            nodes.forEach { node ->
-                println("$indent${node.label} (${node.values})")
-                printTree(node.children, "$indent  ")
-            }
-        }
-
-        printTree(chartData.rootNodes)
+//        val chartData = buildHierarchyFromFlatData(testData, TimeResolution.YEAR)
+//
+//        // Печатаем структуру
+//        fun printTree(nodes: List<PointNode>, indent: String = "") {
+//            nodes.forEach { node ->
+//                println("$indent${node.label} (${node.values})")
+//                printTree(node.children, "$indent  ")
+//            }
+//        }
+//
+//        printTree(chartData.rootNodes)
     }
 }

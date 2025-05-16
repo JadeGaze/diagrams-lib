@@ -5,6 +5,9 @@
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
+      <SelectionState runConfigName="GraphicScreenDefaultPreview">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
       <SelectionState runConfigName="LineGraphicScreenDefaultPreview">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
