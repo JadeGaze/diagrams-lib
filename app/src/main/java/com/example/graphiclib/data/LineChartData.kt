@@ -13,8 +13,6 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.util.Calendar
-import java.util.TimeZone
 import java.util.concurrent.ConcurrentHashMap
 
 private val labelCache = ConcurrentHashMap<Pair<Any, TimeResolution>, String>()
@@ -31,7 +29,7 @@ data class RawDataPoint(
     val value: Float,
 )
 
-// Уровни детализации
+
 enum class TimeResolution(
     val title: String,
     val canDrillDown: Boolean,
@@ -49,7 +47,7 @@ enum class TimeResolution(
     }
 }
 
-// Основной метод преобразования
+
 suspend fun buildHierarchyFromFlatData(
     rawData: List<RawDataPoint>,
     timeResolution: TimeResolution = TimeResolution.YEAR,
@@ -58,14 +56,14 @@ suspend fun buildHierarchyFromFlatData(
     val isAlreadySorted = rawData.asSequence()
         .zipWithNext { a, b -> a.timestamp <= b.timestamp }
         .all { it }
-
+    println(isAlreadySorted)
     var parsedData = if (rawData.size > 1000) {
         rawData.chunked(rawData.size / Runtime.getRuntime().availableProcessors())
             .map { chunk ->
                 async(Dispatchers.Default) {
                     chunk.map { point ->
                         ParsedDataPoint(
-                            timestamp = parseTimestampUltraFast(point.timestamp),
+                            timestamp = parseTimestamp(point.timestamp),
                             value = point.value
                         )
                     }
@@ -75,7 +73,7 @@ suspend fun buildHierarchyFromFlatData(
         rawData.map { point ->
             async(Dispatchers.Default) {
                 ParsedDataPoint(
-                    timestamp = parseTimestampUltraFast(point.timestamp),
+                    timestamp = parseTimestamp(point.timestamp),
                     value = point.value
                 )
             }
@@ -126,7 +124,6 @@ suspend fun buildHierarchyFromFlatData(
 // Оптимизированный парсер временных меток
 private fun parseTimestampFast(timestampStr: String): Long {
     try {
-        // Обрезаем строку до нужной длины (на случай миллисекунд/таймзоны)
         val normalized = timestampStr.substring(0 until minOf(19, timestampStr.length))
 
         return LocalDateTime.of(
@@ -243,7 +240,7 @@ private suspend fun buildTreeFlow(
 ): Flow<PointNode> = flow {
     if (data.isEmpty()) return@flow
 
-    val grouped = parallelGroupByUltra(data, currentResolution)
+    val grouped = parallelGroupBy(data, currentResolution)
 
 
     val parallelism = when {
@@ -274,7 +271,7 @@ private suspend fun processGroupOptimized(
     val values = FloatArray(group.size) { group[it].value }
 
     val aggregatedValues = if (values.size > maxPointsPerNode) {
-        aggregateValuesOptimized(values, maxPointsPerNode)
+        aggregateValues(values, maxPointsPerNode)
     } else {
         values.toList()
     }
@@ -291,88 +288,24 @@ private suspend fun processGroupOptimized(
     )
 }
 
-private suspend fun parallelGroupBy(
-    data: List<ParsedDataPoint>,
-    resolution: TimeResolution,
-): Map<Long, List<ParsedDataPoint>> = coroutineScope {
-    val result = ConcurrentHashMap<Long, MutableList<ParsedDataPoint>>()
-    val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-
-    data.chunked(data.size.coerceAtLeast(1) / Runtime.getRuntime().availableProcessors())
-        .map { chunk ->
-            async(Dispatchers.Default) {
-                val localMap = mutableMapOf<Long, MutableList<ParsedDataPoint>>()
-                val threadCalendar = calendar.clone() as Calendar
-
-                for (item in chunk) {
-                    threadCalendar.timeInMillis = item.timestamp
-                    val key = when (resolution) {
-                        TimeResolution.YEAR -> {
-                            threadCalendar.set(Calendar.MONTH, 0)
-                            threadCalendar.set(Calendar.DAY_OF_MONTH, 1)
-                            threadCalendar.set(Calendar.HOUR_OF_DAY, 0)
-                            threadCalendar.set(Calendar.MINUTE, 0)
-                            threadCalendar.set(Calendar.SECOND, 0)
-                            threadCalendar.set(Calendar.MILLISECOND, 0)
-                            threadCalendar.timeInMillis
-                        }
-
-                        TimeResolution.MONTH -> {
-                            threadCalendar.set(Calendar.DAY_OF_MONTH, 1)
-                            threadCalendar.set(Calendar.HOUR_OF_DAY, 0)
-                            threadCalendar.set(Calendar.MINUTE, 0)
-                            threadCalendar.set(Calendar.SECOND, 0)
-                            threadCalendar.set(Calendar.MILLISECOND, 0)
-                            threadCalendar.timeInMillis
-                        }
-
-                        TimeResolution.DAY -> {
-                            threadCalendar.set(Calendar.HOUR_OF_DAY, 0)
-                            threadCalendar.set(Calendar.MINUTE, 0)
-                            threadCalendar.set(Calendar.SECOND, 0)
-                            threadCalendar.set(Calendar.MILLISECOND, 0)
-                            threadCalendar.timeInMillis
-                        }
-
-                        TimeResolution.HOUR -> {
-                            threadCalendar.set(Calendar.MINUTE, 0)
-                            threadCalendar.set(Calendar.SECOND, 0)
-                            threadCalendar.set(Calendar.MILLISECOND, 0)
-                            threadCalendar.timeInMillis
-                        }
-                    }
-                    localMap.getOrPut(key) { mutableListOf() }.add(item)
-                }
-
-                localMap.forEach { (key, values) ->
-                    result.merge(key, values) { old, new -> old.also { it.addAll(new) } }
-                }
+private suspend fun aggregateValues(values: FloatArray, maxPoints: Int): List<Float> =
+    withContext(Dispatchers.Default) {
+        when {
+            values.size <= maxPoints -> values.toList()
+            else -> {
+                val step = values.size.toFloat() / maxPoints.toFloat()
+                FloatArray(maxPoints) { index ->
+                    val start = (index * step).toInt()
+                    val end = ((index + 1) * step).toInt().coerceAtMost(values.size)
+                    values.slice(start until end).average().toFloat()
+                }.toList()
             }
-        }.awaitAll()
-
-    result
-}
-
-private suspend fun aggregateValuesOptimized(
-    values: FloatArray,
-    maxPoints: Int,
-): List<Float> = withContext(Dispatchers.Default) {
-    when {
-        values.size <= maxPoints -> values.toList()
-        else -> {
-            val step = values.size.toFloat() / maxPoints.toFloat()
-            FloatArray(maxPoints) { index ->
-                val start = (index * step).toInt()
-                val end = ((index + 1) * step).toInt().coerceAtMost(values.size)
-                values.slice(start until end).average().toFloat()
-            }.toList()
         }
     }
-}
 
 
 // --------------------------------------------------
-private suspend fun parallelGroupByUltra(
+private suspend fun parallelGroupBy(
     data: List<ParsedDataPoint>,
     resolution: TimeResolution,
 ): Map<Long, List<ParsedDataPoint>> = coroutineScope {
@@ -403,10 +336,10 @@ private fun ConcurrentHashMap<Long, MutableList<ParsedDataPoint>>.mergeAll(
 
 private fun getGroupKey(timestamp: Long, resolution: TimeResolution): Long {
     return when (resolution) {
-        TimeResolution.YEAR -> timestamp - timestamp % 31556952000L // Приблизительно 1 год в мс
+        TimeResolution.YEAR -> timestamp - timestamp % 31556952000L
         TimeResolution.MONTH -> {
             val days = timestamp / 86400000
-            (days - days % 30) * 86400000 // Округление до месяца
+            (days - days % 30) * 86400000
         }
 
         TimeResolution.DAY -> timestamp - timestamp % 86400000
@@ -414,11 +347,9 @@ private fun getGroupKey(timestamp: Long, resolution: TimeResolution): Long {
     }
 }
 
-private fun parseTimestampUltraFast(timestampStr: String): Long {
-    // Формат: "2023-01-01T00:00:00" (ровно 19 символов)
+private fun parseTimestamp(timestampStr: String): Long {
     return when {
         timestampStr.length >= 19 -> {
-            // Ручной парсинг без создания промежуточных объектов
             val year = (timestampStr[0] - '0') * 1000 +
                     (timestampStr[1] - '0') * 100 +
                     (timestampStr[2] - '0') * 10 +
@@ -435,6 +366,6 @@ private fun parseTimestampUltraFast(timestampStr: String): Long {
                 .toEpochMilli()
         }
 
-        else -> parseTimestampFast(timestampStr) // fallback
+        else -> parseTimestampFast(timestampStr)
     }
 }

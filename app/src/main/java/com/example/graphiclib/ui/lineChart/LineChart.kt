@@ -30,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.graphiclib.R
+import com.example.graphiclib.data.PointNode
 import com.example.graphiclib.data.RawDataPoint
 import com.example.graphiclib.data.TimeResolution
 import com.example.graphiclib.data.buildHierarchyFromFlatData
@@ -47,6 +48,7 @@ import java.time.temporal.ChronoUnit
 import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.random.Random
+import kotlin.random.nextInt
 
 @Composable
 fun LineChart(
@@ -184,7 +186,7 @@ private fun DrawScope.drawLines(
 @Composable
 fun LineGraphicScreenDefaultPreview() {
     val timeStart = System.currentTimeMillis()
-    val data = runBlocking { generateLargeData() }
+    val data = runBlocking { LineChartData.default<PointNode>() }
     println("TIME OF GENERATION: ${System.currentTimeMillis() - timeStart}")
     GraphicLibTheme {
         LineChart(
@@ -202,13 +204,13 @@ fun LineGraphicScreenDefaultPreview() {
 }
 
 suspend fun generateLargeData(): LineChartData {
-    val startDate = LocalDateTime.of(2023, 1, 1, 0, 0)
-    val endDate = LocalDateTime.of(2023, 12, 31, 23, 0)
+    val startDate = LocalDateTime.of(2022, 5, 1, 0, 0)
+    val endDate = LocalDateTime.of(2023, 10, 31, 23, 0)
     val totalHours = ChronoUnit.HOURS.between(startDate, endDate) + 1
 
     // Генерируем 20,000 точек (примерно по 2 точки в час)
     val pointsPerHour = 2
-    val totalPoints = 1_000_000
+    val totalPoints = 100_000
     val step = (totalHours * pointsPerHour).toDouble() / totalPoints
 
     val rawData = mutableListOf<RawDataPoint>()
@@ -227,9 +229,8 @@ suspend fun generateLargeData(): LineChartData {
             RawDataPoint(
                 timestamp = currentDateTime.format(DateTimeFormatter.ISO_DATE_TIME),
                 value = baseValue +
-                        (dailyVariation * sin(2 * PI * currentDateTime.dayOfYear / 365)).toFloat() +
-                        (hourlyVariation * sin(2 * PI * currentDateTime.hour / 24)).toFloat() +
-                        (Random.nextFloat() * 2 - 1) * randomNoise
+                        (dailyVariation * sin(2 * PI * currentDateTime.dayOfYear / 365)).toInt() +
+                        (hourlyVariation * sin(2 * PI * currentDateTime.hour / 24)).toInt()
             )
         )
 
