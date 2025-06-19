@@ -12,7 +12,7 @@ import kotlin.math.roundToInt
 
 abstract class ChartState<T : TreeNode<T>, D : ChartData<T>>(
     protected val data: D,
-) {
+){
     val root = data.rootNodes
 
     protected var chartWidth = 0f

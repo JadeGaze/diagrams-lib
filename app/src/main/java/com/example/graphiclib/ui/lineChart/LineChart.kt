@@ -1,5 +1,6 @@
 package com.example.graphiclib.ui.lineChart
 
+import android.icu.util.TimeZone.SystemTimeZoneType
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
@@ -29,12 +30,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.graphiclib.R
+import com.example.graphiclib.data.generateLargeLineChartData
 import com.example.graphiclib.ui.barChart.BarChartStyle
 import com.example.graphiclib.ui.base.LineChartData
 import com.example.graphiclib.ui.theme.GraphicLibTheme
 import com.example.graphiclib.ui.utils.calculateGridSteps
 import com.example.graphiclib.ui.utils.drawAxis
 import com.example.graphiclib.ui.utils.drawGridWithSteps
+import java.time.LocalDateTime
 
 @Composable
 fun LineChart(
@@ -42,6 +45,7 @@ fun LineChart(
     chartStyle: BarChartStyle,
     state: LineChartState,
 ) {
+    val start = System.currentTimeMillis()
 
     val textMeasurer = rememberTextMeasurer()
     val (stepSize, steps) = remember(state.maxValue) { calculateGridSteps(state.maxValue) }
@@ -68,6 +72,7 @@ fun LineChart(
 
         state.setChartSize(chartWidth, chartHeight)
 
+
         drawAxis(
             chartWidth = chartWidth,
             chartHeight = chartHeight,
@@ -88,6 +93,7 @@ fun LineChart(
 
         drawLines(state, textMeasurer, chartStyle, chartHeight, chartWidth)
 
+        println("TIME DRAWING: ${(System.currentTimeMillis() - start)}")
     }
 
 }
@@ -157,6 +163,7 @@ private fun DrawScope.drawLines(
 @Preview(showBackground = true)
 @Composable
 fun LineGraphicScreenDefaultPreview() {
+    val data = generateLargeLineChartData()
     GraphicLibTheme {
         LineChart(
             Modifier
@@ -166,7 +173,7 @@ fun LineGraphicScreenDefaultPreview() {
                 .height((LocalConfiguration.current.screenWidthDp * 9 / 16).dp),
             chartStyle = BarChartStyle.Default,
             state = LineChartState(
-                data = LineChartData.default()
+                data = data
             )
         )
     }
